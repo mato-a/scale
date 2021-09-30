@@ -87,12 +87,19 @@ export class Alertbox {
     }
   };
 
+  getHeaderSlotInput() {
+    return this.hostElement.querySelector("p[slot='header']").innerHTML;
+  }
+
+  getTextSlotInput() {
+    if (this.content)
+      return this.hostElement.querySelector("p[slot='text']").innerHTML;
+  }
+
   render() {
     this.onCloseAlertWithTimeout();
 
-    if (!this.opened) {
-      return null;
-    }
+    if (!this.opened) return null;
 
     return (
       <Host>
@@ -100,7 +107,7 @@ export class Alertbox {
           <div part="container" class="alertbox__container">
             {this.handleIcons()}
             <header part="header" class="alertbox__container-header">
-              <p>
+              <p aria-label={this.getHeaderSlotInput()}>
                 <slot name="header">Missing Title</slot>
               </p>
 
@@ -117,7 +124,11 @@ export class Alertbox {
             </header>
           </div>
           {this.content && (
-            <p part="content" class="alertbox__content">
+            <p
+              part="content"
+              class="alertbox__content"
+              aria-label={this.getTextSlotInput()}
+            >
               <slot name="text" />
             </p>
           )}
