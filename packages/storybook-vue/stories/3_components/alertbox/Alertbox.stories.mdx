@@ -96,7 +96,7 @@ export const TemplateSlot = (args, { argTypes }) => ({
 <ArgsTable story="Standard" />
 
 ```html
-<scale-alertbox variant="informational" opened> </scale-alertbox>
+<scale-alertbox opened> </scale-alertbox>
 ```
 
 ## Scoped CSS variables
@@ -207,12 +207,12 @@ export const TemplateSlot = (args, { argTypes }) => ({
 </Canvas>
 
 ```html
-<scale-alertbox variant="error" opened> </scale-alertbox>
+<scale-alertbox has-close opened> </scale-alertbox>
 ```
 
 ## Timeout
 
-### Set to close in 10 seconds. Default - when true: is 3 seconds
+### Set to close in 10 seconds. Default - when true: 3 seconds
 
 <Canvas withSource="none">
   <Story
@@ -237,6 +237,7 @@ export const TemplateSlot = (args, { argTypes }) => ({
     name="Titel-Message"
     args={{
       opened: true,
+      hasClose: true,
     }}
   >
     {TemplateSlot.bind({})}
