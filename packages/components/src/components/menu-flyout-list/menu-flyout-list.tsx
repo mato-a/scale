@@ -278,8 +278,10 @@ export class MenuFlyoutList {
   }
 
   updateTriggerAttributes() {
-    const trigger = this.trigger();
-    trigger.setAttribute('aria-expanded', String(this.opened));
+    let trigger = this.trigger();
+    if (trigger && trigger.getAttribute('aria-haspopup') === 'true') {
+      trigger.setAttribute('aria-expanded', String(this.opened));
+    }
   }
 
   setWindowSize() {
@@ -429,9 +431,10 @@ export class MenuFlyoutList {
   }
 
   getListItems() {
-    return Array.from(this.hostElement.children).filter(
-      (el: HTMLScaleMenuFlyoutItemElement) =>
-        ITEM_ROLES.includes(el.getAttribute('role')) && el.disabled !== true
+    return Array.from(
+      this.hostElement.children
+    ).filter((el: HTMLScaleMenuFlyoutItemElement) =>
+      ITEM_ROLES.includes(el.getAttribute('role'))
     );
   }
 

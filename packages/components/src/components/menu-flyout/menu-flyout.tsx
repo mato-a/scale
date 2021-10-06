@@ -15,6 +15,16 @@ import { isClickOutside } from '../../utils/utils';
 
 const MENU_SELECTOR = '[role="menu"]';
 
+const isButtonOrLink = (el: HTMLElement) => {
+  if (
+    el.tagName.toUpperCase() === 'BUTTON' ||
+    el.tagName.toUpperCase() === 'A' ||
+    el.getAttribute('role') === 'button'
+  ) {
+    return el;
+  }
+};
+
 @Component({
   tag: 'scale-menu-flyout',
   styleUrl: 'menu-flyout.css',
@@ -90,12 +100,18 @@ export class MenuFlyout {
   }
 
   componentDidLoad() {
-    this.trigger = this.hostElement.querySelector('[slot="trigger"]');
+    const triggerSlot = this.hostElement.querySelector(
+      '[slot="trigger"]'
+    ) as HTMLElement;
+    if (triggerSlot && triggerSlot.tagName.toUpperCase() === 'SCALE-BUTTON') {
+      this.trigger = triggerSlot.shadowRoot.querySelector('button');
+    } else {
+      this.trigger = triggerSlot;
+    }
     this.lists = new Set(
       Array.from(this.hostElement.querySelectorAll(MENU_SELECTOR))
     );
     this.setTriggerAttributes();
-    this.adjustYSpacing();
   }
 
   setTriggerAttributes() {
@@ -103,23 +119,12 @@ export class MenuFlyout {
       this.hostElement.querySelectorAll('[role="menuitem"]')
     )
       .filter((el) => el.querySelector('[slot="sublist"]') != null)
-      .concat(
-        this.trigger && this.trigger.tagName.toLocaleLowerCase() !== 'div'
-          ? [this.trigger]
-          : []
-      )
+      .concat([isButtonOrLink(this.trigger)])
       .filter((x) => x != null);
     triggers.forEach((el) => {
       el.setAttribute('aria-haspopup', 'true');
       el.setAttribute('aria-expanded', 'false');
     });
-  }
-
-  adjustYSpacing() {
-    const list = this.getListElement();
-    if (list.style.getPropertyValue('--spacing-y-list') === '') {
-      list.style.setProperty('--spacing-y-list', 'var(--scl-spacing-16, 1rem)');
-    }
   }
 
   closeAll() {
@@ -131,10 +136,9 @@ export class MenuFlyout {
 
   toggle = () => {
     const list = this.getListElement();
-    if (list.opened) {
-      this.closeAll();
-      return;
-    }
+    // We could check for `list.opened === true` to do `closeAll`
+    // but list close themselves with outside clicks, so `list.opened`
+    // will always be `false` here…
     if (this.direction != null) {
       // Overwrite `direction` in list
       list.direction = this.direction;
