@@ -43,6 +43,8 @@ const readData = (data) => {
 export class Header {
   @Element() hostElement: HTMLStencilElement;
   mobileMenuToggle?: HTMLAnchorElement;
+  userMenuToggle?: HTMLAnchorElement;
+  userMenuMobileToggle?: HTMLAnchorElement;
   @Prop() logoHref?: string;
   @Prop() logoTitle?: string;
   @Prop() logoClick?: any;
@@ -50,6 +52,7 @@ export class Header {
   @Prop() portalName?: string = '';
   @Prop() mainNavigation?: any = [];
   @Prop() iconNavigation?: any = [];
+  @Prop() userNavigation?: any = [];
   @Prop() sectorNavigation?: any = [];
   @Prop() addonNavigation?: any = [];
   @Prop() activeRouteId: string;
@@ -65,6 +68,8 @@ export class Header {
       ({ id }) => id === this.activeSectorId
     ) || readData(this.sectorNavigation)[0];
   @State() mobileMenu: boolean = false;
+  @State() userMenu: boolean = false;
+  @State() userMenuMobile: boolean = false;
   @State() visibleMegaMenu: string = '';
   @State() scrolled: boolean = false;
 
@@ -96,6 +101,17 @@ export class Header {
       this.mobileMenuToggle.focus();
     }
     this.mobileMenu = false;
+  }
+
+  @Listen('scale-close')
+  handleCloseUserMenu() {
+    this.userMenuToggle.focus();
+    this.userMenu = false;
+  }
+
+  @Listen('scale-open')
+  handleOpenUserMenu() {
+    this.userMenu = true;
   }
 
   @Watch('activeSectorId')
@@ -182,6 +198,7 @@ export class Header {
         return;
       }
     }
+    this.userMenuMobile = false;
     this.mobileMenu = !this.mobileMenu;
   }
 
@@ -258,6 +275,13 @@ export class Header {
     const { defaultName, openedName } = readData(this.iconNavigation).find(
       ({ id }) => id === 'menu'
     ) || { defaultName: 'Menu', openedName: 'Close' };
+    const { shortName = 'Login', openedShortName = 'Close' } = readData(
+      this.userNavigation
+    ).find(({ type }) => type === 'userInfo') || {
+      shortName: 'Login',
+      openedShortName: 'Close',
+    };
+
     return (
       <ul class="meta-navigation">
         {this.hasSlotMenuIcon ? (
@@ -279,6 +303,51 @@ export class Header {
               </scale-nav-icon>
             ))
         )}
+
+        {readData(this.userNavigation).length > 0 && (
+          <span>
+            <span class="header__user-menu--desktop">
+              <scale-menu-flyout>
+                <scale-nav-icon
+                  slot="trigger"
+                  active={this.userMenu}
+                  icon={'user-file-user'}
+                  refUserMenuToggle={(el) => (this.userMenuToggle = el)}
+                >
+                  {shortName}
+                </scale-nav-icon>
+                <scale-menu-flyout-list>
+                  <app-navigation-user-menu
+                    hide={() => {
+                      this.userMenu = false;
+                      this.userMenuToggle.focus();
+                    }}
+                    navigation={readData(this.userNavigation)}
+                  ></app-navigation-user-menu>
+                </scale-menu-flyout-list>
+              </scale-menu-flyout>
+            </span>
+            <span class="header__user-menu--mobile">
+              <scale-nav-icon
+                slot="trigger"
+                active={this.userMenuMobile}
+                icon={
+                  this.userMenuMobile ? 'action-circle-close' : 'user-file-user'
+                }
+                refMobileUserMenuToggle={(el) =>
+                  (this.userMenuMobileToggle = el)
+                }
+                clickLink={() => {
+                  this.mobileMenu = false;
+                  this.userMenuMobile = !this.userMenuMobile;
+                }}
+              >
+                {this.userMenuMobile ? openedShortName : shortName}
+              </scale-nav-icon>
+            </span>
+          </span>
+        )}
+
         {(readData(this.mainNavigation).length > 0 ||
           this.hasSlotMenuMobile) && (
           <scale-nav-icon
@@ -419,6 +488,24 @@ export class Header {
                 </div>
               )}
             </nav>
+            <nav
+              class={`header__nav__mobile-menu${
+                this.userMenuMobile ? ' header__nav__mobile-menu--opened' : ''
+              }`}
+              aria-label="main"
+            >
+              <div>
+                {this.userMenuMobile && (
+                  <app-navigation-user-menu
+                    hide={() => {
+                      this.userMenuMobile = false;
+                      this.userMenuMobileToggle.focus();
+                    }}
+                    navigation={readData(this.userNavigation)}
+                  ></app-navigation-user-menu>
+                )}
+              </div>
+            </nav>
           </div>
         </header>
       </Host>
@@ -429,7 +516,8 @@ export class Header {
     return classNames(
       'header',
       this.scrolled && 'header--sticky',
-      (this.visibleMegaMenu || this.mobileMenu) && 'menu--open'
+      (this.visibleMegaMenu || this.mobileMenu || this.userMenuMobile) &&
+        'menu--open'
     );
   }
 }
